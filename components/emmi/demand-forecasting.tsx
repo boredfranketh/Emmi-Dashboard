@@ -14,15 +14,31 @@ import {
 } from "recharts"
 import { KPITile } from "./kpi-tile"
 import { cn } from "@/lib/utils"
-import { demandSeries, kpis } from "@/lib/mockData"
+import { demandSeries } from "@/lib/mockData"
+import type { DemandDataPoint } from "@/lib/mockData"
 
 const defaultProduct = "Caffè Latte"
 
+function getChartDomain(data: DemandDataPoint[]): [number, number] {
+  const values = data.flatMap((point) =>
+    [point.actual, point.forecast, point.lower, point.upper].filter(
+      (value): value is number => value !== null
+    )
+  )
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const padding = Math.round((max - min) * 0.1)
+
+  return [min - padding, max + padding]
+}
+
 export function DemandForecasting() {
   const [selectedProduct, setSelectedProduct] = useState(defaultProduct)
-  const chartData =
-    demandSeries.find((series) => series.product === selectedProduct)?.data ??
-    demandSeries[0].data
+  const selectedSeries =
+    demandSeries.find((series) => series.product === selectedProduct) ??
+    demandSeries[0]
+  const chartData = selectedSeries.data
+  const chartDomain = getChartDomain(chartData)
 
   return (
     <section className="flex-1 p-6 overflow-auto">
@@ -31,7 +47,7 @@ export function DemandForecasting() {
           Demand Forecasting
         </h2>
         <p className="text-sm text-muted-foreground">
-          Next 12 weeks across 6 markets
+          Next 12 weeks across {selectedSeries.markets.join(", ")}
         </p>
       </div>
 
@@ -54,7 +70,7 @@ export function DemandForecasting() {
 
       <div className="bg-[#1A1A20] rounded-md border border-border p-4 mb-6">
         <div className="text-xs text-muted-foreground mb-4">
-          {selectedProduct} — Actual vs Forecast (units in thousands)
+          {selectedProduct} — Actual vs Forecast ({selectedSeries.unit})
         </div>
         <div className="h-[240px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -74,7 +90,7 @@ export function DemandForecasting() {
                 tick={{ fill: "#B0BECF", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                domain={[3500, 6000]}
+                domain={chartDomain}
               />
               <Tooltip
                 contentStyle={{
@@ -137,7 +153,7 @@ export function DemandForecasting() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {kpis.map((kpi) => (
+        {selectedSeries.kpis.map((kpi) => (
           <KPITile
             key={kpi.label}
             label={kpi.label}
