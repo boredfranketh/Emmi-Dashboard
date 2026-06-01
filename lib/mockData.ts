@@ -4,6 +4,12 @@ export interface Market {
   name: string
   code: string
   status: MarketStatus
+  productionSites: number
+  planningCycleDays: number
+  forecastAccuracy: string
+  inventoryDays?: number
+  topProducts: string[]
+  summary: string
 }
 
 export interface DemandDataPoint {
@@ -34,6 +40,7 @@ export type AlertSeverity = "critical" | "warning" | "info"
 
 export interface Alert {
   id: number
+  market: string
   message: string
   severity: AlertSeverity
 }
@@ -127,17 +134,138 @@ const mademoiselleSeries: DemandDataPoint[] = [
 ]
 
 export const markets: Market[] = [
-  { name: "Switzerland", code: "CH", status: "on-plan" },
-  { name: "Germany", code: "DE", status: "on-plan" },
-  { name: "Austria", code: "AT", status: "at-risk" },
-  { name: "Spain", code: "ES", status: "critical" },
-  { name: "Italy", code: "IT", status: "at-risk" },
-  { name: "France", code: "FR", status: "on-plan" },
-  { name: "Netherlands", code: "NL", status: "at-risk" },
-  { name: "UK", code: "UK", status: "on-plan" },
-  { name: "USA", code: "US", status: "on-plan" },
-  { name: "Brazil", code: "BR", status: "critical" },
-  { name: "Chile", code: "CL", status: "at-risk" },
+  {
+    name: "Switzerland",
+    code: "CH",
+    status: "on-plan",
+    productionSites: 12,
+    planningCycleDays: 4,
+    forecastAccuracy: "92.1%",
+    inventoryDays: 16,
+    topProducts: ["Kaltbach Cheese", "Caffè Latte", "Aktifit"],
+    summary:
+      "Home market on plan. Emmen hub coordinating domestic retail and export flows smoothly.",
+  },
+  {
+    name: "Germany",
+    code: "DE",
+    status: "on-plan",
+    productionSites: 9,
+    planningCycleDays: 6,
+    forecastAccuracy: "89.4%",
+    inventoryDays: 23,
+    topProducts: ["Kaltbach Cheese", "Caffè Latte", "Energy Milk"],
+    summary:
+      "Largest EU market. Kaltbach inventory elevated at 23 days — above 18-day target.",
+  },
+  {
+    name: "Austria",
+    code: "AT",
+    status: "at-risk",
+    productionSites: 4,
+    planningCycleDays: 5,
+    forecastAccuracy: "88.7%",
+    inventoryDays: 19,
+    topProducts: ["Kaltbach Cheese", "Caffè Latte", "Aktifit"],
+    summary:
+      "Foodservice-driven demand stable but promotional timing misaligned with supply windows.",
+  },
+  {
+    name: "Spain",
+    code: "ES",
+    status: "critical",
+    productionSites: 3,
+    planningCycleDays: 9,
+    forecastAccuracy: "84.2%",
+    inventoryDays: 11,
+    topProducts: ["Caffè Latte", "Mademoiselle Desserts"],
+    summary:
+      "Caffè Latte demand surging +18%. Supply gap risk through W9 without replanning.",
+  },
+  {
+    name: "Italy",
+    code: "IT",
+    status: "at-risk",
+    productionSites: 5,
+    planningCycleDays: 8,
+    forecastAccuracy: "86.5%",
+    inventoryDays: 17,
+    topProducts: ["Mademoiselle Desserts", "Caffè Latte"],
+    summary:
+      "Dessert portfolio growing but forecast bias on seasonal SKUs needs recalibration.",
+  },
+  {
+    name: "France",
+    code: "FR",
+    status: "on-plan",
+    productionSites: 6,
+    planningCycleDays: 7,
+    forecastAccuracy: "90.3%",
+    inventoryDays: 15,
+    topProducts: ["Mademoiselle Desserts", "Energy Milk", "Caffè Latte"],
+    summary:
+      "Balanced demand-supply position. Q3 promo calendar aligned with production capacity.",
+  },
+  {
+    name: "Netherlands",
+    code: "NL",
+    status: "at-risk",
+    productionSites: 2,
+    planningCycleDays: 6,
+    forecastAccuracy: "87.9%",
+    inventoryDays: 20,
+    topProducts: ["Aktifit", "Kaltbach Cheese"],
+    summary:
+      "Distribution lead times extended. Aktifit shelf availability under review.",
+  },
+  {
+    name: "UK",
+    code: "UK",
+    status: "on-plan",
+    productionSites: 3,
+    planningCycleDays: 7,
+    forecastAccuracy: "88.1%",
+    inventoryDays: 18,
+    topProducts: ["Kaltbach Cheese", "Mademoiselle Desserts"],
+    summary:
+      "Post-Brexit supply chain stabilised. Cheese portfolio performing above plan.",
+  },
+  {
+    name: "USA",
+    code: "US",
+    status: "on-plan",
+    productionSites: 8,
+    planningCycleDays: 14,
+    forecastAccuracy: "85.9%",
+    inventoryDays: 21,
+    topProducts: ["Energy Milk", "Mademoiselle Desserts", "Caffè Latte"],
+    summary:
+      "Long planning cycle due to cross-border logistics. Q3 promotional alignment pending.",
+  },
+  {
+    name: "Brazil",
+    code: "BR",
+    status: "critical",
+    productionSites: 7,
+    planningCycleDays: 12,
+    forecastAccuracy: "83.6%",
+    inventoryDays: 14,
+    topProducts: ["Energy Milk", "Caffè Latte"],
+    summary:
+      "Production line P3 capacity bottleneck limiting Energy Milk output. Escalation active.",
+  },
+  {
+    name: "Chile",
+    code: "CL",
+    status: "at-risk",
+    productionSites: 2,
+    planningCycleDays: 11,
+    forecastAccuracy: "86.0%",
+    inventoryDays: 16,
+    topProducts: ["Energy Milk", "Aktifit"],
+    summary:
+      "Import-dependent market. Currency volatility affecting safety stock targets.",
+  },
 ]
 
 export const demandSeries: DemandSeries[] = [
@@ -301,23 +429,39 @@ export const demandSeries: DemandSeries[] = [
 export const alerts: Alert[] = [
   {
     id: 1,
+    market: "ES",
     message: "Spain — Caffè Latte demand surging +18%, supply gap risk",
     severity: "critical",
   },
   {
     id: 2,
+    market: "BR",
     message: "Brazil — production line P3 capacity bottleneck",
     severity: "critical",
   },
   {
     id: 3,
+    market: "DE",
     message: "Germany — Kaltbach inventory 23 days, above target",
     severity: "warning",
   },
   {
     id: 4,
+    market: "US",
     message: "USA — Q3 promotional planning needs alignment",
     severity: "info",
+  },
+  {
+    id: 5,
+    market: "AT",
+    message: "Austria — promotional calendar misaligned with supply windows",
+    severity: "warning",
+  },
+  {
+    id: 6,
+    market: "IT",
+    message: "Italy — Mademoiselle Desserts seasonal forecast bias detected",
+    severity: "warning",
   },
 ]
 

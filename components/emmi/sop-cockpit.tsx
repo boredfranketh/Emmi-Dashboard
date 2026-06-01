@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { StatusDot } from "./status-dot"
 import { SeverityPill } from "./severity-pill"
+import { cn } from "@/lib/utils"
 import {
   BarChart,
   Bar,
@@ -9,10 +11,27 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip,
+  Cell,
 } from "recharts"
 import { alerts, markets, planningCycleTime } from "@/lib/mockData"
 
 export function SOPCockpit() {
+  const [selectedMarketCode, setSelectedMarketCode] = useState<string | null>(
+    null
+  )
+
+  const selectedMarket = selectedMarketCode
+    ? markets.find((market) => market.code === selectedMarketCode)
+    : null
+
+  const filteredAlerts = selectedMarketCode
+    ? alerts.filter((alert) => alert.market === selectedMarketCode)
+    : alerts
+
+  const handleMarketClick = (code: string) => {
+    setSelectedMarketCode((current) => (current === code ? null : code))
+  }
+
   return (
     <section className="flex-1 min-w-[280px] p-6 border-l border-border overflow-auto">
       <div className="mb-6">
@@ -28,9 +47,16 @@ export function SOPCockpit() {
         </div>
         <div className="grid w-full grid-cols-4 gap-3">
           {markets.map((market) => (
-            <div
+            <button
               key={market.code}
-              className="relative isolate box-border flex aspect-square min-h-16 w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-border bg-[#0F0F12]"
+              type="button"
+              onClick={() => handleMarketClick(market.code)}
+              className={cn(
+                "relative isolate box-border flex aspect-square min-h-16 w-full min-w-0 cursor-pointer items-center justify-center overflow-hidden rounded-md border bg-[#0F0F12] transition-colors",
+                selectedMarketCode === market.code
+                  ? "border-[#5BC5E8] ring-1 ring-[#5BC5E8]/50"
+                  : "border-border hover:border-muted-foreground"
+              )}
             >
               <StatusDot
                 status={market.status}
@@ -39,7 +65,7 @@ export function SOPCockpit() {
               <span className="block text-center text-base font-bold leading-none tracking-wide text-white">
                 {market.code}
               </span>
-            </div>
+            </button>
           ))}
         </div>
         <div className="flex items-center gap-4 mt-4 text-[10px] text-muted-foreground">
@@ -58,29 +84,87 @@ export function SOPCockpit() {
         </div>
       </div>
 
+      {selectedMarket && (
+        <div className="bg-[#1A1A20] rounded-md border border-[#5BC5E8]/40 p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base font-bold text-white">
+              {selectedMarket.code}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {selectedMarket.name}
+            </span>
+            <StatusDot status={selectedMarket.status} />
+          </div>
+          <p className="text-sm text-foreground leading-relaxed mb-4">
+            {selectedMarket.summary}
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="rounded-md bg-[#0F0F12] border border-border p-3">
+              <div className="text-muted-foreground mb-1">Production Sites</div>
+              <div className="text-sm font-semibold text-foreground">
+                {selectedMarket.productionSites}
+              </div>
+            </div>
+            <div className="rounded-md bg-[#0F0F12] border border-border p-3">
+              <div className="text-muted-foreground mb-1">Planning Cycle</div>
+              <div className="text-sm font-semibold text-foreground">
+                {selectedMarket.planningCycleDays} days
+              </div>
+            </div>
+            <div className="rounded-md bg-[#0F0F12] border border-border p-3">
+              <div className="text-muted-foreground mb-1">Forecast Accuracy</div>
+              <div className="text-sm font-semibold text-foreground">
+                {selectedMarket.forecastAccuracy}
+              </div>
+            </div>
+            <div className="rounded-md bg-[#0F0F12] border border-border p-3">
+              <div className="text-muted-foreground mb-1">Inventory Days</div>
+              <div className="text-sm font-semibold text-foreground">
+                {selectedMarket.inventoryDays ?? "—"}
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 text-xs">
+            <span className="text-muted-foreground">Top products: </span>
+            <span className="text-foreground">
+              {selectedMarket.topProducts.join(", ")}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#1A1A20] rounded-md border border-border p-4 mb-6">
         <div className="text-xs text-muted-foreground mb-3">
           Critical Alerts
+          {selectedMarketCode && (
+            <span className="text-[#5BC5E8]"> — {selectedMarketCode}</span>
+          )}
         </div>
         <div className="space-y-2">
-          {alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className="flex items-start justify-between gap-4 py-3 px-3 bg-[#0F0F12] rounded-md"
-            >
-              <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="pt-0.5 shrink-0">
-                  <SeverityPill severity={alert.severity} />
+          {filteredAlerts.length > 0 ? (
+            filteredAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-start justify-between gap-4 py-3 px-3 bg-[#0F0F12] rounded-md"
+              >
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="pt-0.5 shrink-0">
+                    <SeverityPill severity={alert.severity} />
+                  </div>
+                  <span className="text-sm text-foreground leading-relaxed">
+                    {alert.message}
+                  </span>
                 </div>
-                <span className="text-sm text-foreground leading-relaxed">
-                  {alert.message}
-                </span>
+                <button className="text-[11px] text-[#5BC5E8] hover:underline whitespace-nowrap pt-0.5 shrink-0">
+                  Investigate
+                </button>
               </div>
-              <button className="text-[11px] text-[#5BC5E8] hover:underline whitespace-nowrap pt-0.5 shrink-0">
-                Investigate
-              </button>
+            ))
+          ) : (
+            <div className="py-6 px-3 text-sm text-muted-foreground text-center bg-[#0F0F12] rounded-md">
+              No alerts for {selectedMarketCode}. Market is clear.
             </div>
-          ))}
+          )}
         </div>
       </div>
 
@@ -115,12 +199,16 @@ export function SOPCockpit() {
                 }}
                 cursor={{ fill: "#2A2A34" }}
               />
-              <Bar
-                dataKey="days"
-                fill="#5BC5E8"
-                radius={[0, 4, 4, 0]}
-                barSize={12}
-              />
+              <Bar dataKey="days" radius={[0, 4, 4, 0]} barSize={12}>
+                {planningCycleTime.map((entry) => (
+                  <Cell
+                    key={entry.market}
+                    fill={
+                      entry.market === selectedMarketCode ? "#C8102E" : "#5BC5E8"
+                    }
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
