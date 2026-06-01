@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { forwardRef, useImperativeHandle, useRef, useState } from "react"
 import { ChatMessage } from "./chat-message"
 import { Send, Sparkles } from "lucide-react"
 import {
@@ -96,10 +96,16 @@ function InlineComparisonChart() {
   )
 }
 
-export function PlanningCopilot() {
+export type PlanningCopilotHandle = {
+  sendMessage: (message: string) => void
+}
+
+export const PlanningCopilot = forwardRef<PlanningCopilotHandle>(
+  function PlanningCopilot(_props, ref) {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>(initialChatHistory)
   const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const sendMessage = async (message: string) => {
     const trimmed = message.trim()
@@ -146,8 +152,15 @@ export function PlanningCopilot() {
       ])
     } finally {
       setIsLoading(false)
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    sendMessage: (message: string) => {
+      void sendMessage(message)
+    },
+  }))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,7 +172,10 @@ export function PlanningCopilot() {
   }
 
   return (
-    <aside className="w-[380px] bg-card border-l border-border flex flex-col">
+    <aside
+      id="planning-copilot"
+      className="w-[380px] bg-card border-l border-border flex flex-col"
+    >
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-[#5BC5E8]/20 flex items-center justify-center">
@@ -206,6 +222,7 @@ export function PlanningCopilot() {
         {isLoading && (
           <ChatMessage role="assistant" content="Analysing..." />
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={handleSubmit} className="p-4 border-t border-border">
@@ -232,4 +249,4 @@ export function PlanningCopilot() {
       </form>
     </aside>
   )
-}
+})

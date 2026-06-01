@@ -15,7 +15,11 @@ import {
 } from "recharts"
 import { alerts, markets, planningCycleTime } from "@/lib/mockData"
 
-export function SOPCockpit() {
+interface SOPCockpitProps {
+  onInvestigate?: (alertMessage: string) => void
+}
+
+export function SOPCockpit({ onInvestigate }: SOPCockpitProps) {
   const [selectedMarketCode, setSelectedMarketCode] = useState<string | null>(
     null
   )
@@ -155,7 +159,11 @@ export function SOPCockpit() {
                     {alert.message}
                   </span>
                 </div>
-                <button className="text-[11px] text-[#5BC5E8] hover:underline whitespace-nowrap pt-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onInvestigate?.(alert.message)}
+                  className="text-[11px] text-[#5BC5E8] hover:underline whitespace-nowrap pt-0.5 shrink-0"
+                >
                   Investigate
                 </button>
               </div>
